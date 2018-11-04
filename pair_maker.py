@@ -7,7 +7,7 @@ for key, value in pair_data.items():
     instruments.append(key)
 
 
-# Making a list of all instrument pairs
+# Making a list of all instrument pairs (based on quoted currency)
 first_pairs = []
 for pair in itertools.combinations(instruments, 2):
 
@@ -17,7 +17,7 @@ for pair in itertools.combinations(instruments, 2):
         first_pairs.append((pair[0], pair[1]))
 
 
-# Adding the final instrument to the pairs to convert currency back to starting
+# Adding the final instrument to the pairs to convert currency back to starting (based on the currency only in one pair and the starting currency)
 pairs = []
 for pair in first_pairs:
     currency1 = pair[0][:3]
@@ -37,7 +37,3 @@ for pair in first_pairs:
         combo_str = combo[0] + '_' + combo[1]
         if combo_str not in pair and combo_str in instruments:
             pairs.append((pair[0], pair[1], combo_str))
-
-
-# print(pairs)
-# print('Pairs: ' + str(len(pairs)))

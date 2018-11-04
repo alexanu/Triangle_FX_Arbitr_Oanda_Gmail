@@ -1,22 +1,16 @@
-from main import obj
-
-def arb_calculator(obj, start_balance, start_currency):
+def arb_calculator(pairing_obj, start_balance, start_currency):
+  
+  # Initializing variables that will be used
   rates = []
-  for instrument, rate in obj.items():
-      rates.append((instrument, float(rate)) )
-
-  # print(rates)
-  # print('---------------------------------------------')
-
-  # start_balance = 1000000
-  # start_currency = 'USD'
-  next_currency = ''
-  last_currency = ''
-
   current_balance = 0
   current_currency = ''
 
-  # Step 1: Convert starting currency into currency2
+  # Adding rate tuples to empty rates list
+  for instrument, rate in pairing_obj.items():
+      rates.append( (instrument, float(rate)) )
+
+
+  # Step 1: Convert starting currency into currency 2
   for rate in rates:
       base = rate[0][:3]
       quoted = rate[0][4:]
@@ -28,11 +22,8 @@ def arb_calculator(obj, start_balance, start_currency):
           rates.remove(rate)
           break
 
-  # print('Rates: ', rates)
-  # print('Balance: ', current_balance, current_currency)
-  # print('---------------------------------------------')
 
-  # Step 2: Convert currency2 into currency3
+  # Step 2: Convert currency 2 into currency 3
   for rate in rates:
       base = rate[0][:3]
       quoted = rate[0][4:]
@@ -53,9 +44,6 @@ def arb_calculator(obj, start_balance, start_currency):
             rates.remove(rate)
             break
 
-  # print('Rates: ', rates)
-  # print('Balance: ', current_balance, current_currency)
-  # print('---------------------------------------------')
 
   # Step 3: Convert currency 3 back into starting currency
   for rate in rates:
@@ -78,16 +66,6 @@ def arb_calculator(obj, start_balance, start_currency):
             rates.remove(rate)
             break
 
-  # print('Rates: ', rates)
-  # print('Balance: ', current_balance, current_currency)
-  # print('---------------------------------------------')
-
 
   profit = current_balance - start_balance
-  # print('Profit: $', profit)
-
   return profit
-
-
-for pear, rates in obj.items():
-  print(pear, ': Profit = ', arb_calculator(rates, 10000, 'USD'))
