@@ -1,6 +1,5 @@
 ## Testing w/ Oanda REST-V20 API
-
-from config import key, account_id
+from config import *
 import requests
 import json
 import pprint
