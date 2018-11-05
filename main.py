@@ -1,5 +1,5 @@
 from config import key, account_id
-from pairs import pairs
+from pair_maker import pairs
 from arb_calc import arb_calculator
 import requests
 import pprint
@@ -16,37 +16,53 @@ def send_request(url, headers):
     r = requests.get(url, headers=headers).json()
     return r
 
-# Opening result.txt file
-myfile = open('results.txt', 'w')
-pair_no = 0
+# # Opening result.txt file
+# myfile = open('results.txt', 'w')
+# pair_no = 0
 
 # Initializing results object
 obj = {}
 
-# Function to get price for all possible instrument pairs
+start_currency_pairs = []
 for pair in pairs:
+  for instrument in pair:
+    if starting_currency in instrument and pair not in start_currency_pairs:
+        start_currency_pairs.append(pair)
+
+
+# Function to get price for all possible instrument pairs
+for pair in start_currency_pairs:
 
     # Initializing current pair object
     obj[pair] = {}
 
     # Fetch data for each instrument
     for instrument in pair:
-        instrument_url = "https://api-fxpractice.oanda.com/v3/instruments/{}/candles?count=6&price=M&granularity=S5".format(instrument)
-        instrument_data = send_request(instrument_url, headers)
-        name = instrument_data['instrument']
-        rate = instrument_data['candles'][0]['mid']['c']
+        obj[pair][instrument] = {}
+
+        # Get bid data
+        bid_url = "https://api-fxpractice.oanda.com/v3/instruments/{}/candles?count=1&price=B&granularity=S5".format(instrument)
+        bid_data = send_request(bid_url, headers)
+        pprint.pprint(bid_data)
+        name = bid_data['instrument']
+        bid_rate = float(bid_data['candles'][0]['bid']['c'])
+
+        # Get ask data
+        ask_url = "https://api-fxpractice.oanda.com/v3/instruments/{}/candles?count=1&price=A&granularity=S5".format(instrument)
+        ask_data = send_request(ask_url, headers)
+        pprint.pprint(ask_data)
+        name = ask_data['instrument']
+        ask_rate = float(ask_data['candles'][0]['ask']['c'])
 
         # Add data to results object
-        obj[pair][instrument] = rate
+        obj[pair][instrument]['bid'] = bid_rate
+        obj[pair][instrument]['ask'] = ask_rate
     
+    pprint.pprint(obj[pair])
+
     # Calculate if arbitrage exist between the pairing
-    profit = arb_calculator(obj[pair], starting_balance, starting_currency)
-    profit_margin = (profit / starting_balance) * 100
+    arb_calculator(obj[pair], starting_balance, starting_currency)
 
-    # Writing pair results to result file
-    if profit != -starting_balance:
-      myfile.write("%s, %s\n" %(pair_no, profit_margin))
-      pair_no += 1
 
-# Closing result file
-myfile.close()
+# # Closing result file
+# myfile.close()

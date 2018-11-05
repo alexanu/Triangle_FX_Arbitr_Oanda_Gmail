@@ -1,71 +1,54 @@
-def arb_calculator(pairing_obj, start_balance, start_currency):
-  
-  # Initializing variables that will be used
-  rates = []
-  current_balance = 0
-  current_currency = ''
+def arb_calculator(obj, starting_balance, starting_currency):
 
-  # Adding rate tuples to empty rates list
-  for instrument, rate in pairing_obj.items():
-      rates.append( (instrument, float(rate)) )
+    edge_pair = []
+    mid_pair = ''
 
+    # Get possible starting pairs based on starting_currency
+    for key, value in obj.items():
+        if starting_currency in key:
+            edge_pair.append(key)
+        else:
+            mid_pair = key
 
-  # Step 1: Convert starting currency into currency 2
-  for rate in rates:
-      base = rate[0][:3]
-      quoted = rate[0][4:]
+    pairing_1 = (edge_pair[0], mid_pair, edge_pair[1])
+    pairing_2 = (edge_pair[1], mid_pair, edge_pair[0])
+    pairing_orders = [pairing_1, pairing_2]
 
-      if base == start_currency:
+    # To run both pairing order options
+    for pairing in pairing_orders:
 
-          current_balance = rate[1] * start_balance
-          current_currency = rate[0][4:]
-          rates.remove(rate)
-          break
+        balance = starting_balance
+        currency = starting_currency
 
+        for x in range(0, len(pairing)):
 
-  # Step 2: Convert currency 2 into currency 3
-  for rate in rates:
-      base = rate[0][:3]
-      quoted = rate[0][4:]
+            base = pairing[x][:3]
+            quote = pairing[x][4:]
 
-      if current_currency in rate[0] and start_currency not in rate[0]:
-          
-          if base == current_currency:
+            if base == currency:
+                # We are buying base/quote at the ask price
+                balance = balance * (1 * obj[pairing[x]]['ask'])
+                currency = quote
 
-            current_balance = rate[1] * current_balance
-            current_currency = quoted
-            rates.remove(rate)
-            break
+            elif quote == currency:
+                # We are selling base/quote at the bid price
+                balance = balance * (1 / obj[pairing[x]]['bid'])
+                currency = base
 
-          if quoted == current_currency:
+        profit = round(balance - starting_balance, 5)
+        profit_margin = round((profit / balance) * 100, 5)
 
-            current_balance = current_balance / rate[1]
-            current_currency = base
-            rates.remove(rate)
-            break
+        if profit > 0:
 
+            print('Arbitrage Detected')
+            print('Trade in this order: {} for a profit of ${} {} ({} %)'.format(
+                pairing, profit, currency, profit_margin))
+            print('-------------------------------------------------------------------------------------------')
 
-  # Step 3: Convert currency 3 back into starting currency
-  for rate in rates:
-      base = rate[0][:3]
-      quoted = rate[0][4:]
-
-      if current_currency in rate[0] and start_currency in rate[0]:
-          
-          if base == current_currency:
-
-            current_balance = rate[1] * current_balance
-            current_currency = quoted
-            rates.remove(rate)
-            break
-
-          if quoted == current_currency:
-
-            current_balance = current_balance / rate[1]
-            current_currency = base
-            rates.remove(rate)
-            break
-
-
-  profit = current_balance - start_balance
-  return profit
+            result_object = {
+                "steps": pairing,
+                "profit": profit,
+                "profit_margin": profit_margin,
+                "currency": currency
+            }
+            return result_object
