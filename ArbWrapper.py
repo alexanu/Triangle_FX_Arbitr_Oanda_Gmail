@@ -14,6 +14,8 @@ class ArbitrageWrapper:
     }
 
     def __init__(self, starting_balance, starting_currency):
+        self.starting_balance = starting_balance
+        self.starting_currency = starting_currency
         print('Attempting to find arbitrage')
         print('Balance: ' + str(starting_balance) + ' ' + starting_currency)
 
@@ -52,7 +54,7 @@ class ArbitrageWrapper:
         }
         return rates
 
-    def make_instrument_combos(self, instruments):
+    def make_instrument_triangles(self, instruments):
 
         # Making a list of all instrument pairs (based on quoted currency)
         first_instruments = []
@@ -75,17 +77,52 @@ class ArbitrageWrapper:
             for combo in itertools.combinations(currencies, 2):
                 combo_str = combo[0] + '_' + combo[1]
                 if combo_str not in instrument and combo_str in instruments:
-                    instruments.append((instrument[0], instrument[1], combo_str))
+                    instruments.append(
+                        (instrument[0], instrument[1], combo_str))
 
         return instruments
 
-    def arb_calculator(self, obj, starting_balance, starting_currency):
+    def make_tri_w_starting_curr(self, triangles):
+        tri_w_starting_curr = []
+        for pair in triangles:
+            for instrument in pair:
+                if self.starting_currency in instrument and pair not in tri_w_starting_curr:
+                    tri_w_starting_curr.append(pair)
+        return tri_w_starting_curr
+
+    def connect_to_stream(self, instruments):
+        """
+        Environment                 Description 
+        fxTrade (Live)              The live (real money) environment 
+        fxTrade Practice (Demo)     The demo (simulated money) environment 
+        """
+        domainDict = {'live': 'stream-fxtrade.oanda.com',
+                      'demo': 'stream-fxpractice.oanda.com'}
+
+        environment = "demo"  # Replace this 'live' if you wish to connect to the live environment
+        domain = domainDict[environment]
+        try:
+            s = requests.Session()
+            url = "https://" + domain + \
+                "/v3/accounts/{}/pricing/stream?instruments={}".format(
+                    account_id, instruments)
+            params = {'instruments': instruments}
+            req = requests.Request(
+                'GET', url, headers=self.headers, params=params)
+            pre = req.prepare()
+            resp = s.send(pre, stream=True, verify=True)
+            return resp
+        except Exception as e:
+            s.close()
+            print("Caught exception when connecting to stream\n" + str(e))
+
+    def arb_calculator(self, obj):
         edge_pair = []
         mid_pair = ''
 
         # Get possible starting pairs based on starting_currency
         for key, value in obj.items():
-            if starting_currency in key:
+            if self.starting_currency in key:
                 edge_pair.append(key)
             else:
                 mid_pair = key
@@ -95,8 +132,8 @@ class ArbitrageWrapper:
 
         # To run both pairing order options
         for pairing in pairing_orders:
-            balance = starting_balance
-            currency = starting_currency
+            balance = self.starting_balance
+            currency = self.starting_currency
             for x in range(0, len(pairing)):
                 base = pairing[x][:3]
                 quote = pairing[x][4:]
@@ -111,9 +148,9 @@ class ArbitrageWrapper:
                     balance = balance * (1 / obj[pairing[x]]['bid'])
                     currency = base
 
-            profit = round(balance - starting_balance, 5)
+            profit = round(balance - self.starting_balance, 5)
             profit_margin = round((profit / balance) * 100, 5)
-            
+
             if profit > 0:
                 print('Arbitrage Detected')
                 print('Trade in this order: {} for a profit of ${} {} ({} %)'.format(
