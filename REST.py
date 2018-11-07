@@ -8,20 +8,20 @@ starting_currency = 'USD'
 arb = ArbitrageWrapper(starting_balance, starting_currency)
 
 instruments = arb.get_all_instruments()
-print(instruments)
+# print(instruments)
 
 triangles = arb.make_instrument_triangles(instruments)
-print(triangles)
+# print(triangles)
 
 tri_w_starting_curr = arb.make_tri_w_starting_curr(triangles)
-print(tri_w_starting_curr)
+# print(tri_w_starting_curr)
 
 # Initializing results object
 obj = {}
 
 # Function to get price for all possible instrument pairs
 for triangle in tri_w_starting_curr:
-
+    print(triangle)
     # Initializing current triangle object
     obj[triangle] = {}
 
@@ -36,4 +36,5 @@ for triangle in tri_w_starting_curr:
     pprint.pprint(obj[triangle])
 
     # Calculate if arbitrage exist between the triangle
+    print(obj[triangle])
     arb.arb_calculator(obj[triangle])

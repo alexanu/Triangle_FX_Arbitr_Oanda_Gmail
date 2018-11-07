@@ -12,6 +12,7 @@ class ArbitrageWrapper:
         "Content-Type": "application/json",
         "Authorization": key
     }
+    environment = "demo"  # Replace this 'live' if you wish to connect to the live environment
 
     def __init__(self, starting_balance, starting_currency):
         self.starting_balance = starting_balance
@@ -98,17 +99,16 @@ class ArbitrageWrapper:
         """
         domainDict = {'live': 'stream-fxtrade.oanda.com',
                       'demo': 'stream-fxpractice.oanda.com'}
-
-        environment = "demo"  # Replace this 'live' if you wish to connect to the live environment
-        domain = domainDict[environment]
+        domain = domainDict[ArbitrageWrapper.environment]
         try:
             s = requests.Session()
             url = "https://" + domain + \
                 "/v3/accounts/{}/pricing/stream?instruments={}".format(
                     account_id, instruments)
-            params = {'instruments': instruments}
+            # params = {'instruments': instruments}
+            print(url)
             req = requests.Request(
-                'GET', url, headers=self.headers, params=params)
+                'GET', url, headers=self.headers)
             pre = req.prepare()
             resp = s.send(pre, stream=True, verify=True)
             return resp
@@ -134,29 +134,43 @@ class ArbitrageWrapper:
         for pairing in pairing_orders:
             balance = self.starting_balance
             currency = self.starting_currency
+            units = 0
+            commission = 0
+
             for x in range(0, len(pairing)):
                 base = pairing[x][:3]
                 quote = pairing[x][4:]
 
                 if base == currency:
                     # We are buying base/quote at the ask price
-                    balance = balance * (1 * obj[pairing[x]]['ask'])
+                    price = obj[pairing[x]]['ask']
+                    units = balance / price
+                    balance = balance * (1 * price)
                     currency = quote
+                    commission += (units / 100000) * 5
+                    print('BUY', units, 'units of', pairing[x], '@ ASK price of', price, '=', balance, currency)
 
                 elif quote == currency:
                     # We are selling base/quote at the bid price
-                    balance = balance * (1 / obj[pairing[x]]['bid'])
+                    price = obj[pairing[x]]['bid']
+                    units = balance / price
+                    balance = balance * (1 / price)
                     currency = base
-
-            profit = round(balance - self.starting_balance, 5)
+                    commission += (units / 100000) * 5
+                    print('SELL', units, 'units of', pairing[x], '@ BID price of', price, '=', balance, currency)
+                    
+            profit = balance - self.starting_balance
             profit_margin = round((profit / balance) * 100, 5)
-
-            if profit > 0:
+            if profit - commission > 0:
                 print('Arbitrage Detected')
-                print('Trade in this order: {} for a profit of ${} {} ({} %)'.format(
-                    pairing, profit, currency, profit_margin))
-                print(
-                    '-------------------------------------------------------------------------------------------')
+                print(pairing)
+                print('Profit: ', profit)
+                print('Commission: ', commission)
+                print('Net Profit: ', profit - commission)
+                # print('Trade in this order: {} for a profit of ${} {} ({} %)'.format(
+                #     pairing, profit, currency, profit_margin))
+                # print(
+                #     '-------------------------------------------------------')
 
                 result_object = {
                     "steps": pairing,
@@ -164,4 +178,47 @@ class ArbitrageWrapper:
                     "profit_margin": profit_margin,
                     "currency": currency
                 }
-                return result_object
+                return (profit - commission)
+
+    def place_limit_order(self, price, instrument):
+        domainDict = {'live': 'stream-fxtrade.oanda.com',
+                      'demo': 'stream-fxpractice.oanda.com'}
+        domain = domainDict[ArbitrageWrapper.environment]
+        try:
+            s = requests.Session()
+
+            body = {
+              "order": {
+                "price": price,
+                # "stopLossOnFill": {
+                #   "timeInForce": "GTC",
+                #   "price": "1.7000"
+                # },
+                # "takeProfitOnFill": {
+                #   "price": "1.14530"
+                # },
+                "timeInForce": "GTC",
+                "instrument": instrument,
+                "units": "-1000",
+                "type": "LIMIT",
+                "positionFill": "DEFAULT"
+              }
+            }
+
+            url = "https://" + domain + \
+                "/v3/accounts/{}/orders".format(
+                    account_id)
+
+            # params = {'instruments': instrument}
+
+            req = requests.Request(
+                'POST', url, headers=self.headers)
+            pre = req.prepare()
+
+            resp = s.send(pre, verify=True)
+
+            return resp
+
+        except Exception as e:
+            s.close()
+            print("Caught exception when connecting to stream\n" + str(e))
