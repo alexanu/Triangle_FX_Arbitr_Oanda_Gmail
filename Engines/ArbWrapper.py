@@ -1,10 +1,9 @@
-from config import *
+from '../config/comfig' import *
 import requests
 import json
 import pprint
 import itertools
 import pprint
-
 
 class ArbitrageWrapper:
     # Headers required by API

@@ -8,6 +8,7 @@ import oandapyV20.endpoints.positions as positions
 import oandapyV20.endpoints.transactions as transactions
 import oandapyV20.endpoints.pricing as pricing
 import configparser
+import requests
 
 ## Account
 # r = accounts.AccountChanges(accountID)
@@ -69,6 +70,10 @@ class Oanda():
     access_token = config['oanda']['api_key']
     api = API(access_token=access_token)
     client = oandapyV20.API(access_token=access_token)
+    headers = {
+        # "Content-Type": "application/json",
+        "Authorization": 'Bearer ' + str(access_token)
+    }
 
     def __init__(self):
         pass
@@ -87,6 +92,14 @@ class Oanda():
     def getCurrentBid(self, instruments):
         bid = self.send_request(pricing.PricingInfo(Oanda.accountID, params={'instruments': instruments}))['prices'][0]['bids'][0]['price']
         return float(bid)
+
+    def connectToStream(self, instruments):
+        s = requests.Session()
+        url = "https://stream-fxpractice.oanda.com/v3/accounts/{}/pricing/stream?instruments={}".format(Oanda.accountID, instruments)
+        req = requests.Request('GET', url, headers=Oanda.headers)
+        pre = req.prepare()
+        resp = s.send(pre, stream=True, verify=True)
+        return resp
     
     def placeMarketBuyOrder(self, instrument, units):
         data = {
