@@ -1,4 +1,5 @@
 from oandapyV20 import API
+import oandapyV20
 import oandapyV20.endpoints.accounts as accounts
 import oandapyV20.endpoints.instruments as instruments
 import oandapyV20.endpoints.orders as orders
@@ -6,17 +7,7 @@ import oandapyV20.endpoints.trades as trades
 import oandapyV20.endpoints.positions as positions
 import oandapyV20.endpoints.transactions as transactions
 import oandapyV20.endpoints.pricing as pricing
-
 import configparser
-import oandapyV20
-
-config = configparser.ConfigParser()
-config.read('../config/config.ini')
-accountID = config['oanda']['account_id']
-access_token = config['oanda']['api_key']
-
-api = API(access_token=access_token)
-client = oandapyV20.API(access_token=access_token)
 
 ## Account
 # r = accounts.AccountChanges(accountID)
@@ -71,5 +62,50 @@ client = oandapyV20.API(access_token=access_token)
 # r = pricing.PricingStream(accountID, params='EUR_USD')
 
 
-# client.request(r)
-# pprint.pprint(r.response)
+class Oanda():
+    config = configparser.ConfigParser()
+    config.read('./config/oanda.ini')
+    accountID = config['oanda']['account_id']
+    access_token = config['oanda']['api_key']
+    api = API(access_token=access_token)
+    client = oandapyV20.API(access_token=access_token)
+
+    def __init__(self):
+        pass
+
+    def send_request(self, r):
+        Oanda.client.request(r)
+        return r.response
+
+    def getPrice(self, instruments):
+        return self.send_request(pricing.PricingInfo(Oanda.accountID, params={'instruments': instruments}))
+
+    def getCurrentAsk(self, instruments):
+        ask = self.send_request(pricing.PricingInfo(Oanda.accountID, params={'instruments': instruments}))['prices'][0]['asks'][0]['price']
+        return float(ask)
+
+    def getCurrentBid(self, instruments):
+        bid = self.send_request(pricing.PricingInfo(Oanda.accountID, params={'instruments': instruments}))['prices'][0]['bids'][0]['price']
+        return float(bid)
+    
+    def placeMarketBuyOrder(self, instrument, units):
+        data = {
+            "order": {
+                "instrument": instrument,
+                "units": str(units),
+                "type": "MARKET",
+                "positionFill": "DEFAULT"
+            }
+        }
+        return self.send_request(orders.OrderCreate(Oanda.accountID, data))
+
+    def placeMarketSellOrder(self, instrument, units):
+        data = {
+            "order": {
+                "instrument": instrument,
+                "units": str(float(units) * -1),
+                "type": "MARKET",
+                "positionFill": "DEFAULT"
+            }
+        }
+        return self.send_request(orders.OrderCreate(Oanda.accountID, data))
