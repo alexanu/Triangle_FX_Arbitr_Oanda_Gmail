@@ -1,7 +1,7 @@
 # Forex Trading Bots
 Developed from scratch by Troy Smith
 
-![quant finance](https://www.google.com/url?sa=i&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwiqo9SSldLeAhWlct8KHWimBGkQjRx6BAgBEAU&url=https%3A%2F%2Fwww.stevens.edu%2Fschool-business%2Fundergraduate-programs%2Fquantitative-finance&psig=AOvVaw1_mSGBEzUz68c80fRoZ6WH&ust=1542225837531863)
+![Quantitative Finance](https://www.google.com/url?sa=i&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwiqo9SSldLeAhWlct8KHWimBGkQjRx6BAgBEAU&url=https%3A%2F%2Fwww.stevens.edu%2Fschool-business%2Fundergraduate-programs%2Fquantitative-finance&psig=AOvVaw1_mSGBEzUz68c80fRoZ6WH&ust=1542225837531863)
 
 
 ## What is 'Algorithmic Trading'
