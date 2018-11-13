@@ -17,17 +17,14 @@ arb = ArbitrageWrapper(starting_balance, starting_currency)
 response = arb.connect_to_stream(instruments)
 
 triangle_obj = {
-  instrument_1: {},
-  instrument_2: {},
-  instrument_3: {}
+    instrument_1: {},
+    instrument_2: {},
+    instrument_3: {}
 }
 
-
-total_profit = 0
-
 if response.status_code != 200:
-  print(response.text)
-  # return
+    print(response.text)
+    # return
 
 for line in response.iter_lines(1):
     if line:
@@ -39,27 +36,36 @@ for line in response.iter_lines(1):
             ask_price = msg['asks'][0]["price"]
 
             if instrument == instrument_1:
-              triangle_obj[instrument_1] = {
-                'bid': float(bid_price),
-                'ask': float(ask_price)
-              }
+                triangle_obj[instrument_1] = {
+                    'bid': float(bid_price),
+                    'ask': float(ask_price)
+                }
             elif instrument == instrument_2:
-              triangle_obj[instrument_2] = {
-                'bid': float(bid_price),
-                'ask': float(ask_price)
-              }
+                triangle_obj[instrument_2] = {
+                    'bid': float(bid_price),
+                    'ask': float(ask_price)
+                }
             elif instrument == instrument_3:
-              triangle_obj[instrument_3] = {
-                'bid': float(bid_price),
-                'ask': float(ask_price)
-              }
-            pprint.pprint(triangle_obj)
-            print(instrument + ' Bid: ', bid_price)
-            print(instrument + ' Ask: ', ask_price)
-            total_profit += arb.arb_calculator(triangle_obj)
-            print('TOTAL PROFIT: ', total_profit)
-            print('-----------------------------------------------------------------------')
+                triangle_obj[instrument_3] = {
+                    'bid': float(bid_price),
+                    'ask': float(ask_price)
+                }
 
+            # Get object with profitable triangles
+            result = arb.arb_calculator(triangle_obj)
+            # pprint.pprint(result)
+
+            print('Arbitrage Detected')
+            # print('BUY ' + str(units) + ' units of ' + str(pairing[x]) + ' @ ASK price of ' + str(price) + ' = ' + str(balance) + ' ' + str(currency))
+
+            # Place an order for each step in the triangle
+            for trade in result['trades']:
+                # pprint.pprint(trade)
+                resp = arb.place_limit_order(trade)
+                pprint.pprint(resp.text)
+
+            print(
+                '-----------------------------------------------------------------------')
 
         except Exception as e:
             continue
