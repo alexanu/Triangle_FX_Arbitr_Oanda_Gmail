@@ -9,6 +9,7 @@ import oandapyV20.endpoints.transactions as transactions
 import oandapyV20.endpoints.pricing as pricing
 import configparser
 import requests
+from random import randint
 
 ## Account
 # r = accounts.AccountChanges(accountID)
@@ -122,3 +123,12 @@ class Oanda():
             }
         }
         return self.send_request(orders.OrderCreate(Oanda.accountID, data))
+    
+    def PickRandomPair(self, pair_type):
+      pairs = {
+        'major': ['EUR_USD', 'USD_JPY', 'GBP_USD', 'USD_CAD', 'USD_CHF', 'AUD_USD', 'NZD_USD'],
+        'minor': ['EUR_GBP', 'EUR_CHF', 'EUR_CAD', 'EUR_AUD', 'EUR_NZD', 'EUR_JPY', 'GBP_JPY', 'CHF_JPY', 'CAD_JPY', 'AUD_JPY', 'NZD_JPY', 'GBP_CHF', 'GBP_AUD', 'GBP_CAD'],
+        'exotic': ['EUR_TRY', 'USD_SEK', 'USD_NOK', 'USD_DKK', 'USD_ZAR', 'USD_HKD', 'USD_SGD']
+      }
+      length = len(pairs[pair_type]) - 1
+      return pairs[pair_type][randint(0, length)]
