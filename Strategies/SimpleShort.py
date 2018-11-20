@@ -16,7 +16,7 @@ Oanda = Oanda()
 pair = Oanda.PickRandomPair('major')
 print(pair)
 orderType = 'SHORT'
-units = 10
+units = 100000
 
 short_price = float(Oanda.placeMarketSellOrder(pair, units)['orderFillTransaction']['price'])
 print(short_price)

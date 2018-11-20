@@ -11,7 +11,7 @@ import configparser
 import requests
 from random import randint
 
-## Account
+# Account
 # r = accounts.AccountChanges(accountID)
 # r = accounts.AccountConfiguration(accountID)
 # r = accounts.AccountDetails(accountID)
@@ -87,21 +87,24 @@ class Oanda():
         return self.send_request(pricing.PricingInfo(Oanda.accountID, params={'instruments': instruments}))
 
     def getCurrentAsk(self, instruments):
-        ask = self.send_request(pricing.PricingInfo(Oanda.accountID, params={'instruments': instruments}))['prices'][0]['asks'][0]['price']
+        ask = self.send_request(pricing.PricingInfo(Oanda.accountID, params={
+                                'instruments': instruments}))['prices'][0]['asks'][0]['price']
         return float(ask)
 
     def getCurrentBid(self, instruments):
-        bid = self.send_request(pricing.PricingInfo(Oanda.accountID, params={'instruments': instruments}))['prices'][0]['bids'][0]['price']
+        bid = self.send_request(pricing.PricingInfo(Oanda.accountID, params={
+                                'instruments': instruments}))['prices'][0]['bids'][0]['price']
         return float(bid)
 
     def connectToStream(self, instruments):
         s = requests.Session()
-        url = "https://stream-fxpractice.oanda.com/v3/accounts/{}/pricing/stream?instruments={}".format(Oanda.accountID, instruments)
+        url = "https://stream-fxpractice.oanda.com/v3/accounts/{}/pricing/stream?instruments={}".format(
+            Oanda.accountID, instruments)
         req = requests.Request('GET', url, headers=Oanda.headers)
         pre = req.prepare()
         resp = s.send(pre, stream=True, verify=True)
         return resp
-    
+
     def placeMarketBuyOrder(self, instrument, units):
         data = {
             "order": {
@@ -123,12 +126,11 @@ class Oanda():
             }
         }
         return self.send_request(orders.OrderCreate(Oanda.accountID, data))
-    
+
     def PickRandomPair(self, pair_type):
-      pairs = {
-        'major': ['EUR_USD', 'USD_JPY', 'GBP_USD', 'USD_CAD', 'USD_CHF', 'AUD_USD', 'NZD_USD'],
-        'minor': ['EUR_GBP', 'EUR_CHF', 'EUR_CAD', 'EUR_AUD', 'EUR_NZD', 'EUR_JPY', 'GBP_JPY', 'CHF_JPY', 'CAD_JPY', 'AUD_JPY', 'NZD_JPY', 'GBP_CHF', 'GBP_AUD', 'GBP_CAD'],
-        'exotic': ['EUR_TRY', 'USD_SEK', 'USD_NOK', 'USD_DKK', 'USD_ZAR', 'USD_HKD', 'USD_SGD']
-      }
-      length = len(pairs[pair_type]) - 1
-      return pairs[pair_type][randint(0, length)]
+        pairs = {
+            'major': ['EUR_USD', 'USD_JPY', 'GBP_USD', 'USD_CAD', 'USD_CHF', 'AUD_USD', 'NZD_USD'],
+            'minor': ['EUR_GBP', 'EUR_CHF', 'EUR_CAD', 'EUR_AUD', 'EUR_NZD', 'EUR_JPY', 'GBP_JPY', 'CHF_JPY', 'CAD_JPY', 'AUD_JPY', 'NZD_JPY', 'GBP_CHF', 'GBP_AUD', 'GBP_CAD'],
+            'exotic': ['EUR_TRY', 'USD_SEK', 'USD_NOK', 'USD_DKK', 'USD_ZAR', 'USD_HKD', 'USD_SGD']
+        }
+        return pairs[pair_type][randint(0, len(pairs[pair_type]) - 1)]
