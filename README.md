@@ -14,6 +14,14 @@ Algorithmic trading makes use of much more complex formulas, combined with mathe
 
 ## My Strategies
 
+### SMA5 Mean Reversion
+Basic algo trading strategy is the mean reversion system, which operates under the assumption that markets are ranging 80% of the time. Black boxes that employ this strategy typically calculate an average asset price using historical data and takes trades in anticipation of the current price returning to the average price. 
+
+Steps:
+- Look at the 5-day moving average and trade from the other side
+- Buy if current price is below its moving average and Short if it is above
+- Sell/buy back when price crosses 5-day SMA
+
 ### Simple Short
 This strategy was created for learning purposes only. It is basically just my own implementation of a continuous random instrument short w/ a take profit. 
 
