@@ -10,6 +10,7 @@ import oandapyV20.endpoints.pricing as pricing
 import configparser
 import requests
 from random import randint
+from functools import reduce
 
 # Account
 # r = accounts.AccountChanges(accountID)
@@ -95,6 +96,18 @@ class Oanda():
         bid = self.send_request(pricing.PricingInfo(Oanda.accountID, params={
                                 'instruments': instruments}))['prices'][0]['bids'][0]['price']
         return float(bid)
+
+    def getSMA5(self, instrument):
+        params = {
+            "count": 5,
+            "price": 'A',
+            "granularity": 'D'
+        }
+        candles = self.send_request(instruments.InstrumentsCandles(
+            instrument=instrument, params=params))['candles']
+        prices = list(map(lambda x: x['ask']['c'], candles))
+        SMA5 = sum(float(i) for i in prices) / len(prices)
+        return SMA5
 
     def connectToStream(self, instruments):
         s = requests.Session()

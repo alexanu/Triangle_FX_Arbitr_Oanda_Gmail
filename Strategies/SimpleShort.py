@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/local/bin python3
 
 # Run the following bash command in the terminal to loop script
 # while :; do ./Strategies/SimpleShort.py; sleep 60; done
 
 import pandas as pd
 import numpy as np
+import datetime
 
 import json
 import sys
@@ -36,6 +37,8 @@ for line in response.iter_lines(1):
         try:
             line = line.decode('utf-8')
             msg = json.loads(line)
+            date = str(datetime.datetime.now())[:10]
+            time = str(datetime.datetime.now().time())
             instrument = msg['instrument']
             ask_price = float(msg['asks'][0]["price"])
             profit = short_price - ask_price
@@ -52,15 +55,16 @@ for line in response.iter_lines(1):
                 result = 'No Profit'
                 # print('No profit')
 
-            data = np.array([[' ', 'Instrument', 'Short', 'Ask', 'Profit', 'Result'],
-                            [' ', instrument, short_price, ask_price, round(profit, 6), result]])
+            # Data visualization
+            data = np.array([[' ', 'Date', 'Time', 'Instrument', 'Short', 'Ask', 'Profit', 'Result'],
+                            [' ' , date, time, instrument, short_price, ask_price, round(profit, 6), result]])
 
             print(pd.DataFrame(data=data[1:,1:],
                               index=data[1:,0],
                               columns=data[0,1:]))
 
-            print('--------------------------------------------------------')
+            print('-------------------------------------------------------------------------------')
 
         except Exception as e:
             print("Caught exception: " + str(e))
-            print('--------------------------------------------------------')
+            print('-------------------------------------------------------------------------------')
