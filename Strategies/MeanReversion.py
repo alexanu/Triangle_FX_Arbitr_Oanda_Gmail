@@ -14,7 +14,7 @@ import datetime
 
 import json
 import sys
-sys.path.append('/Users/troysmith/Code/AlgorithmicTradingBots/Engines') 
+sys.path.append('/Users/troysmith/Code/AlgorithmicTradingBots/Engines')
 from Oanda import Oanda
 Oanda = Oanda()
 
@@ -30,25 +30,25 @@ current_bid = Oanda.getCurrentBid(instrument)
 date = str(datetime.datetime.now())[:10]
 time = str(datetime.datetime.now().time())
 data = np.array([[' ', 'Date', 'Time', 'Instrument', 'SMA5', 'Bid', 'Ask'],
-                [' ' , date, time, instrument, SMA5, current_bid, current_ask]])
+                 [' ', date, time, instrument, SMA5, current_bid, current_ask]])
 
-print(pd.DataFrame(data=data[1:,1:],
-                  index=data[1:,0],
-                  columns=data[0,1:]))
+print(pd.DataFrame(data=data[1:, 1:],
+                   index=data[1:, 0],
+                   columns=data[0, 1:]))
 
 # If current ask price is lower than the SMA5, buy the pair
 if current_ask < SMA5:
-  Oanda.placeMarketBuyOrder(instrument, units)
-  trade_type = 'LONG'
+    Oanda.placeMarketBuyOrder(instrument, units)
+    trade_type = 'LONG'
 
 
 # If current bid price is higher than the SMA5, short the pair
 if current_bid > SMA5:
-  Oanda.placeMarketSellOrder(instrument, units)
-  trade_type = 'SHORT'
+    Oanda.placeMarketSellOrder(instrument, units)
+    trade_type = 'SHORT'
 
 
-## Connecting to pricing stream for instrument
+# Connecting to pricing stream for instrument
 response = Oanda.connectToStream(instrument)
 
 # This will run every price update
@@ -66,29 +66,29 @@ for line in response.iter_lines(1):
             bid_price = float(msg['bids'][0]["price"])
             ask_price = float(msg['asks'][0]["price"])
 
+            # Data visualization
+            data = np.array([[' ', 'Date', 'Time', 'Instrument', 'Type', 'Bid', 'Ask', 'SMA5'],
+                             [' ', date, time, instrument, trade_type, bid_price, ask_price, round(SMA5, 6)]])
+
+            print(pd.DataFrame(data=data[1:, 1:],
+                               index=data[1:, 0],
+                               columns=data[0, 1:]))
+
+
             # When price crosses the SMA5, sell back the instrument for the same units
-            if ask_price > SMA5 and trade_type == 'LONG':
+            if bid_price > SMA5 and trade_type == 'LONG':
                 Oanda.placeMarketSellOrder(instrument, units)
                 quit()
-            
+
             # When price crosses the SMA5, buy back the instrument for the same units
-            elif bid_price < SMA5 and trade_type == 'SHORT':
+            if ask_price < SMA5 and trade_type == 'SHORT':
                 Oanda.placeMarketBuyOrder(instrument, units)
                 quit()
 
-            else:
-                print('Has not crossed SMA5 yet.')
-
-            # Data visualization
-            data = np.array([[' ', 'Date', 'Time', 'Instrument', 'Type', 'Bid', 'Ask', 'SMA5'],
-                            [' ' , date, time, instrument, trade_type, bid_price, ask_price, round(SMA5, 6)]])
-
-            print(pd.DataFrame(data=data[1:,1:],
-                              index=data[1:,0],
-                              columns=data[0,1:]))
-
+            # print('Has not crossed SMA5 yet.')
             print('-------------------------------------------------------------------------------')
 
         except Exception as e:
             print("Caught exception: " + str(e))
-            print('-------------------------------------------------------------------------------')
+            print(
+                '-------------------------------------------------------------------------------')
