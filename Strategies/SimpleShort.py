@@ -3,9 +3,12 @@
 # Run the following bash command in the terminal to loop script
 # while :; do ./Strategies/SimpleShort.py; sleep 60; done
 
+import pandas as pd
+import numpy as np
+
 import json
 import sys
-sys.path.append('/Users/troysmith/Code/TradingBots/Arb-Bot/Engines') 
+sys.path.append('/Users/troysmith/Code/AlgorithmicTradingBots/Engines') 
 from Oanda import Oanda
 Oanda = Oanda()
 
@@ -16,7 +19,7 @@ Oanda = Oanda()
 pair = Oanda.PickRandomPair('major')
 print(pair)
 orderType = 'SHORT'
-units = 100000
+units = 10000
 
 short_price = float(Oanda.placeMarketSellOrder(pair, units)['orderFillTransaction']['price'])
 print(short_price)
@@ -35,22 +38,26 @@ for line in response.iter_lines(1):
             msg = json.loads(line)
             instrument = msg['instrument']
             ask_price = float(msg['asks'][0]["price"])
-
             profit = short_price - ask_price
-
-            print('Short Price(' + pair + '): ' + str(short_price))
-            print('Current Ask Price (' + pair + '): ' + str(ask_price))
-            print('Current Profit (if bought back): ', profit)
 
             # When profit reaches this threshold, buy back the instrument for the same units
             if profit > 0.005:
+                result = '🔥PROFIT🔥'
                 print('🔥 PROFIT ALERT: ', short_price - ask_price, '🔥')
                 print('Buying back', units, pair, '@', ask_price)
                 Oanda.placeMarketBuyOrder(pair, units)
                 quit()
 
             else:
-                print('No profit')
+                result = 'No Profit'
+                # print('No profit')
+
+            data = np.array([[' ', 'Instrument', 'Short', 'Ask', 'Profit', 'Result'],
+                            [' ', instrument, short_price, ask_price, round(profit, 6), result]])
+
+            print(pd.DataFrame(data=data[1:,1:],
+                              index=data[1:,0],
+                              columns=data[0,1:]))
 
             print('--------------------------------------------------------')
 
