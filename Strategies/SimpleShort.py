@@ -1,4 +1,4 @@
-#!/usr/local/bin python3
+#!/usr/bin/env python3
 
 # Run the following bash command in the terminal to loop script
 # while :; do ./Strategies/SimpleShort.py; sleep 60; done

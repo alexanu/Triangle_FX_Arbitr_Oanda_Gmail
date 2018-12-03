@@ -67,13 +67,13 @@ from functools import reduce
 
 class Oanda():
     config = configparser.ConfigParser()
-    config.read('../config/oanda.ini')
+    config.read('/Users/troysmith/Code/AlgorithmicTradingBots/config/oanda.ini')
     accountID = config['oanda']['account_id']
     access_token = config['oanda']['api_key']
     api = API(access_token=access_token)
     client = oandapyV20.API(access_token=access_token)
     headers = {
-        # "Content-Type": "application/json",
+        "Content-Type": "application/json",
         "Authorization": 'Bearer ' + str(access_token)
     }
 
@@ -83,6 +83,12 @@ class Oanda():
     def send_request(self, r):
         Oanda.client.request(r)
         return r.response
+
+    def GetAvailableBalance(self):
+        return self.send_request(accounts.AccountSummary(Oanda.accountID))
+
+    def GetPositions(self):
+        return self.send_request(positions.PositionList(Oanda.accountID))
 
     def getPrice(self, instruments):
         return self.send_request(pricing.PricingInfo(Oanda.accountID, params={'instruments': instruments}))
@@ -105,9 +111,19 @@ class Oanda():
         }
         candles = self.send_request(instruments.InstrumentsCandles(
             instrument=instrument, params=params))['candles']
-        prices = list(map(lambda x: x['ask']['c'], candles))
-        SMA5 = sum(float(i) for i in prices) / len(prices)
+        prices = list(map(lambda candle: candle['ask']['c'], candles))
+        SMA5 = sum(float(price) for price in prices) / len(prices)
         return SMA5
+
+    def getSMA2M(self, instrument):
+        params = {
+            "count": 60,
+            "price": 'M',
+            "granularity": 'D'
+        }
+        candles = self.send_request(instruments.InstrumentsCandles(
+            instrument=instrument, params=params))['candles']
+        return candles
 
     def connectToStream(self, instruments):
         s = requests.Session()
@@ -118,32 +134,17 @@ class Oanda():
         resp = s.send(pre, stream=True, verify=True)
         return resp
 
-    def placeMarketBuyOrder(self, instrument, units):
-        data = {
-            "order": {
-                "instrument": instrument,
-                "units": str(units),
-                "type": "MARKET",
-                "positionFill": "DEFAULT"
-            }
-        }
+    def placeMarketBuyOrder(self, data):
         return self.send_request(orders.OrderCreate(Oanda.accountID, data))
 
-    def placeMarketSellOrder(self, instrument, units):
-        data = {
-            "order": {
-                "instrument": instrument,
-                "units": str(float(units) * -1),
-                "type": "MARKET",
-                "positionFill": "DEFAULT"
-            }
-        }
+    def placeMarketSellOrder(self, data):
         return self.send_request(orders.OrderCreate(Oanda.accountID, data))
 
     def PickRandomPair(self, pair_type):
         pairs = {
             'major': ['EUR_USD', 'USD_JPY', 'GBP_USD', 'USD_CAD', 'USD_CHF', 'AUD_USD', 'NZD_USD'],
             'minor': ['EUR_GBP', 'EUR_CHF', 'EUR_CAD', 'EUR_AUD', 'EUR_NZD', 'EUR_JPY', 'GBP_JPY', 'CHF_JPY', 'CAD_JPY', 'AUD_JPY', 'NZD_JPY', 'GBP_CHF', 'GBP_AUD', 'GBP_CAD'],
-            'exotic': ['EUR_TRY', 'USD_SEK', 'USD_NOK', 'USD_DKK', 'USD_ZAR', 'USD_HKD', 'USD_SGD']
+            'exotic': ['EUR_TRY', 'USD_SEK', 'USD_NOK', 'USD_DKK', 'USD_ZAR', 'USD_HKD', 'USD_SGD'],
+            'all': ['EUR_USD', 'USD_JPY', 'GBP_USD', 'USD_CAD', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'EUR_GBP', 'EUR_CHF', 'EUR_CAD', 'EUR_AUD', 'EUR_NZD', 'EUR_JPY', 'GBP_JPY', 'CHF_JPY', 'CAD_JPY', 'AUD_JPY', 'NZD_JPY', 'GBP_CHF', 'GBP_AUD', 'GBP_CAD', 'EUR_TRY', 'USD_SEK', 'USD_NOK', 'USD_DKK', 'USD_ZAR', 'USD_HKD', 'USD_SGD']
         }
         return pairs[pair_type][randint(0, len(pairs[pair_type]) - 1)]
