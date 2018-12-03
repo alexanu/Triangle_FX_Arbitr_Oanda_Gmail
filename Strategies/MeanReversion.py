@@ -27,8 +27,13 @@ positionList = [position['instrument'] for position in positionObjList]
 # Pick an instrument that there isnt an existing position for
 # instrument = None
 instrument = Oanda.PickRandomPair('all')
+picked = []
 while instrument in positionList:
     instrument = Oanda.PickRandomPair('all')
+    picked.append(instrument)
+    if sorted(picked) == sorted(positionList): 
+      print('No instruments left')
+      quit()
 
 # Calculate 5 day moving address for chosen instrument
 SMA5 = Oanda.getSMA5(instrument)
@@ -56,8 +61,12 @@ print(pd.DataFrame(data=data[1:, 1:],
 
 # Choose take profit price
 # take_profit = round(SMA5, 3)
-take_profit_on_buy = round(current_ask * 1.05, 3)
-take_profit_on_short = round(current_bid * 0.95, 3)
+profit = .025
+take_profit_on_buy = str(round( (current_ask + current_ask * profit), 3))
+take_profit_on_short = str(round( (current_bid + current_bid * profit), 3))
+
+print(take_profit_on_buy)
+print(take_profit_on_short)
 
 # If current ask price is lower than the SMA5, buy the pair
 if current_ask < SMA5:
