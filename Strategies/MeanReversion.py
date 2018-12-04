@@ -22,18 +22,19 @@ Engine = Engine()
 # Get current positions
 positions = Oanda.GetPositions()
 positionObjList = positions['positions']
-positionList = [position['instrument'] for position in positionObjList]
+positionList = set(position['instrument'] for position in positionObjList)
 
 # Pick an instrument that there isnt an existing position for
 # instrument = None
 instrument = Oanda.PickRandomPair('all')
-picked = []
+picked = set()
 while instrument in positionList:
     instrument = Oanda.PickRandomPair('all')
-    picked.append(instrument)
-    if sorted(picked) == sorted(positionList): 
+    picked.add(instrument)
+
+    if picked == positionList: 
       print('No instruments left')
-      quit()
+      exit()
 
 # Calculate 5 day moving address for chosen instrument
 SMA5 = Oanda.getSMA5(instrument)
@@ -47,7 +48,7 @@ current_bid = Oanda.getCurrentBid(instrument)
 # nav = account_summary['account']['NAV']
 # pprint.pprint(account_summary)
 # units = nav
-units = 100000
+units = 1000000
 
 # Data visualization
 date = str(datetime.datetime.now())[:10]
