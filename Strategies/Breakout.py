@@ -12,7 +12,6 @@ timeframe = "m1"	        # (m1,m5,m15,m30,H1,H2,H3,H4,H6,H8,D1,W1,M1)
 pricedata = None
 numberofcandles = 300
 
-# Connect to FXCM API
 con = fxcmpy.fxcmpy(access_token=token, log_level="error")
 
 # This function runs once at the beginning of the strategy to run initial one-time processes/computations
@@ -50,8 +49,7 @@ def GetLatestPriceData():
     global pricedata
 
     # Normal operation will update pricedata on first attempt
-    new_pricedata = con.get_candles(
-        symbol, period=timeframe, number=numberofcandles)
+    new_pricedata = con.get_candles(symbol, period=timeframe, number=numberofcandles)
     if new_pricedata.index.values[len(new_pricedata.index.values)-1] != pricedata.index.values[len(pricedata.index.values)-1]:
         pricedata = new_pricedata
         return True
